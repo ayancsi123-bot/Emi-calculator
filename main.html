@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Voice Kirana List</title>
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+<style>
+body { background:#f5f7fa; }
+.completed { text-decoration: line-through; color: gray; }
+</style>
+</head>
+
+<body>
+
+<div class="container mt-5">
+  <div class="card p-4 shadow">
+    <h3 class="text-center">🛒 Voice Kirana List</h3>
+
+    <div class="text-center mt-3">
+      <button id="start" class="btn btn-success">🎤 Start</button>
+      <button id="stop" class="btn btn-danger">Stop</button>
+    </div>
+
+    <p id="status" class="text-center mt-2">Click Start</p>
+
+    <ul id="list" class="list-group mt-3"></ul>
+  </div>
+</div>
+
+<script>
+const startBtn = document.getElementById("start");
+const stopBtn = document.getElementById("stop");
+const list = document.getElementById("list");
+const status = document.getElementById("status");
+
+const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+if (!SpeechRecognition) {
+  alert("Use Chrome Browser");
+}
+
+const recognition = new SpeechRecognition();
+recognition.lang = "en-IN";
+recognition.continuous = true;
+
+let running = false;
+
+// START
+startBtn.onclick = async () => {
+  try {
+    await navigator.mediaDevices.getUserMedia({ audio: true });
+    running = true;
+    recognition.start();
+    status.innerText = "🎤 Listening...";
+  } catch {
+    status.innerText = "❌ Mic Permission Denied";
+  }
+};
+
+// STOP
+stopBtn.onclick = () => {
+  running = false;
+  recognition.stop();
+  status.innerText = "Stopped";
+};
+
+// RESULT
+recognition.onresult = (e) => {
+  let text = e.results[e.results.length - 1][0].transcript.trim();
+  if(text) addItem(text);
+};
+
+// AUTO RESTART
+recognition.onend = () => {
+  if (running) {
+    setTimeout(() => recognition.start(), 300);
+  }
+};
+
+// ADD ITEM
+function addItem(text) {
+  const li = document.createElement("li");
+  li.className = "list-group-item d-flex justify-content-between";
+
+  li.innerHTML = `
+    <div>
+      <input type="checkbox" onclick="this.nextElementSibling.classList.toggle('completed')">
+      <span>${text}</span>
+    </div>
+    <button class="btn btn-sm btn-danger" onclick="this.parentElement.remove()">Delete</button>
+  `;
+
+  list.appendChild(li);
+}
+</script>
+
+</body>
+</html>
